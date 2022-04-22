@@ -9,10 +9,11 @@ import java.util.List;
 
 public interface MongoDbService extends MongoRepository<Login, String> {
 
-    @Query("{name:'?0'}")
-    Login findItemByName(String name);
+    @Query("{userName:'?0'}")
+    Login findItemByName(String userName);
 
     @Query(value = "{userName:'?0'}", fields = "{'userName' : 1, 'password' : 1}")
     List<Login> findAll(String category);
+
 
 }

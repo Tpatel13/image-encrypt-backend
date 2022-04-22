@@ -10,6 +10,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+import java.util.HashMap;
+
 @RestController
 @Log4j2
 public class LoginController {
@@ -24,21 +27,24 @@ public class LoginController {
     }
 
 
-    @RequestMapping("/login")
-    public String login(Login login) {
-        return String.valueOf(dbOperations.loginUser(login));
+    @GetMapping("/login")
+    public String login(@RequestParam HashMap<String,String> login) {
+        Login incomingLogin=new Login();
+        incomingLogin.setPassword(login.get("password"));
+        incomingLogin.setUserName(login.get("username"));
+        return String.valueOf(dbOperations.loginUser(incomingLogin));
     }
 
 
     @PostMapping("/signup")
-    public ResponseEntity<HttpStatus> signupUser(@RequestParam SignUp signUp) {
-        log.info("Requested signup for {}",signUp.toString());
+    public ResponseEntity<String> signupUser(@RequestBody @Valid SignUp signUp) {
+        log.info("Requested signup for {}", signUp.toString());
         Boolean successful = dbOperations.signUp(signUp);
         if (Boolean.TRUE.equals(successful)) {
             log.info("User created successfully ");
-            return (ResponseEntity) ResponseEntity.status(HttpStatus.CREATED);
+            return new ResponseEntity<>("Created new User", HttpStatus.OK);
         }
-        return (ResponseEntity) ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR);
+        return  new ResponseEntity<>("Internal server Error", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 

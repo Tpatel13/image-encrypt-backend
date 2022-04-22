@@ -22,15 +22,17 @@ public class FileOperations {
     @Autowired
     StorageService storageService;
 
+
+
     @PostMapping("/uploadFile")
     public String handleFileUpload(@RequestParam("file") MultipartFile file, @RequestParam("user") String username) throws IOException {
         try {
-            storageService.store(file, username);
+            storageService.storeAndEncrypt(file, username);
             log.info("File Successfully saved");
             return "OK";
         } catch (Exception e) {
             log.error("Error while saving file {}", e.getMessage());
-            return "Not OK";
+            return "File Not Uploaded";
         }
     }
 
@@ -38,8 +40,9 @@ public class FileOperations {
     @PostMapping("/encryptFile")
     public String encryptFile(@RequestParam("file") MultipartFile file, @RequestParam("user") String username) throws IOException {
         try {
-            storageService.store(file, username);
+            storageService.storeAndEncrypt(file, username);
             log.info("File Successfully saved");
+
             return "OK";
         } catch (Exception e) {
             log.error("Error while saving file {}", e.getMessage());
@@ -48,10 +51,9 @@ public class FileOperations {
     }
 
 
-    @GetMapping("/test")
-    public String test() {
-        return mongoDbService.findAll().toString();
-
+    @GetMapping("/getAll")
+    public Object getALlUsers() {
+        return mongoDbService.findAll();
     }
 
 
