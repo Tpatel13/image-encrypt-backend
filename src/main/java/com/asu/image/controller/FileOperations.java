@@ -23,18 +23,18 @@ public class FileOperations {
     StorageService storageService;
 
 
-
-    @PostMapping("/uploadFile")
-    public String handleFileUpload(@RequestParam("file") MultipartFile file, @RequestParam("user") String username) throws IOException {
-        try {
-            storageService.storeAndEncrypt(file, username);
-            log.info("File Successfully saved");
-            return "OK";
-        } catch (Exception e) {
-            log.error("Error while saving file {}", e.getMessage());
-            return "File Not Uploaded";
-        }
-    }
+//    @PostMapping("/uploadFile")
+//    public String handleFileUpload(@RequestParam("file") MultipartFile file, @RequestParam("user") String username) throws IOException {
+//        try {
+//            Key key= storageService.storeAndEncrypt(file, username);
+//
+//            log.info("File Successfully saved");
+//            return key.getEncoded().toString();
+//        } catch (Exception e) {
+//            log.error("Error while saving file {}", e.getMessage());
+//            return "File Not Uploaded";
+//        }
+//    }
 
 
     @PostMapping("/encryptFile")
@@ -42,11 +42,10 @@ public class FileOperations {
         try {
             storageService.storeAndEncrypt(file, username);
             log.info("File Successfully saved");
-
-            return "OK";
+            return "File Successfully saved and encrypted successfully ";
         } catch (Exception e) {
             log.error("Error while saving file {}", e.getMessage());
-            return "Not OK";
+            return e.getMessage();
         }
     }
 
