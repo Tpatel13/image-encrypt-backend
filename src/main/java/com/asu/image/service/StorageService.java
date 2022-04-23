@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
+import java.util.UUID;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
@@ -29,7 +30,7 @@ public class StorageService {
     public StorageService() throws NoSuchAlgorithmException {
     }
 
-    public Key storeAndEncrypt(MultipartFile file, String username) throws Exception {
+    public String storeAndEncrypt(MultipartFile file, String username) throws Exception {
         //Generating path to store everything
         String filePath = Utils.getTempPath(username);
         log.info("Storing file at {}", filePath);
@@ -38,19 +39,25 @@ public class StorageService {
         //Store Image in original format for backup
         storeBackupImage(file, path);
 
-        Key key = cryptoService.generateCipher();
+        String base64keyString = cryptoService.generateCipher();
 
         // Save image in encrypted form
-        saveEncryptedFile(key, file, path);
+        String encryptedFilePath = saveEncryptedFile(Utils.base64ToSecretKey(base64keyString), file, path);
+        //decryptimage from encrypted path
 
-        return key;
+        return base64keyString;
 
     }
 
 
+    public void decryptImage(String base64keyString, String encryptedFilePath, String path) throws IOException {
+        String filePath = Utils.getTempPath(username);
+        log.info("Storing file at {}", filePath);
+        Path path = Paths.get(filePath);
+        decryptImageAndSave(Utils.base64ToSecretKey(base64keyString), encryptedFilePath, path);
+    }
+
     private void storeBackupImage(MultipartFile file, Path path) throws Exception {
-
-
         path.toFile().mkdir();
         File targetFile = new File(path.toString() + "/" + file.getOriginalFilename());
 
@@ -65,7 +72,7 @@ public class StorageService {
 
     }
 
-    private void saveEncryptedFile(Key key, MultipartFile file, Path path) throws IOException {
+    private String saveEncryptedFile(Key key, MultipartFile file, Path path) throws IOException {
         byte[] encryptedBytes = cryptoService.encryptImageFile(key, file.getBytes());
 
         File targetEncryptedFile = new File(path.toString() + "/encryptedFiles/" + file.getOriginalFilename());
@@ -80,6 +87,43 @@ public class StorageService {
             ioe.printStackTrace();
             log.error("Error while saving file in encrypted form at {}", targetEncryptedFile.getAbsolutePath());
             throw new IOException("Could not save image file: {}" + targetEncryptedFile.getAbsolutePath());
+        }
+
+        return targetEncryptedFile.getAbsolutePath();
+
+    }
+
+
+    private void decryptImageAndSave(Key key, String encryptedFilePath, String userFolderPath) throws IOException {
+
+        log.info("Decrypting file from : {}", encryptedFilePath);
+        try {
+            File file = new File(encryptedFilePath);
+            byte[] encryptedBytes = Files.readAllBytes(Paths.get(encryptedFilePath));
+            byte[] decryptedBytes = cryptoService.decryptImageFile(key, encryptedBytes);
+
+
+            File targetDecrptFilePath = new File(userFolderPath + "/decryptedFiles/" + UUID.randomUUID());
+
+            File targetEncryptedFileFolder = new File(userFolderPath + "/decryptedFiles/");
+
+
+            try (InputStream inputStream = new ByteArrayInputStream(decryptedBytes)) {
+
+                Files.createDirectories(targetEncryptedFileFolder.toPath());
+                Files.copy(inputStream, targetDecrptFilePath.toPath(), REPLACE_EXISTING);
+                log.info("File decryptedFiles Successfully stored at {}", targetDecrptFilePath.getAbsolutePath());
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+                log.error("Error while saving file in decryptedFiles form at {}", targetDecrptFilePath.getAbsolutePath());
+                throw new IOException("Could not save  decryptedFiles image file: {}" + targetDecrptFilePath.getAbsolutePath());
+            }
+
+            log.info("File Decrypted Successfully from  stored at {}", encryptedFilePath);
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+            log.error("Error while decrypting form at {}", encryptedFilePath);
+            throw new IOException("Could not save image file: " + encryptedFilePath);
         }
 
     }

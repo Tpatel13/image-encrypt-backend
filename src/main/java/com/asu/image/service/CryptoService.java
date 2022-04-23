@@ -6,8 +6,10 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 
 @Service
 @Log4j2
@@ -36,11 +38,12 @@ public class CryptoService {
     }
 
 
-    public Key generateCipher() throws NoSuchAlgorithmException {
+    public String generateCipher() throws NoSuchAlgorithmException {
         KeyGenerator keyGenerator = KeyGenerator.getInstance("AES");
         keyGenerator.init(128);
-        Key key = keyGenerator.generateKey();
-        return key;
+        SecretKey key = keyGenerator.generateKey();
+
+        return Base64.getEncoder().encodeToString(key.getEncoded());
     }
 
     public byte[] decryptImageFile(Key key, byte[] textCryp) {
@@ -49,6 +52,7 @@ public class CryptoService {
         try {
             cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
             cipher.init(Cipher.DECRYPT_MODE, key);
+
             decrypted = cipher.doFinal(textCryp);
 
         } catch (Exception e) {

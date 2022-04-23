@@ -1,5 +1,6 @@
 package com.asu.image.controller;
 
+import com.asu.image.model.Login;
 import com.asu.image.service.MongoDbService;
 import com.asu.image.service.StorageService;
 import lombok.extern.log4j.Log4j2;
@@ -37,18 +38,33 @@ public class FileOperations {
 //    }
 
 
-    @PostMapping("/encryptFile")
+    @PostMapping("/uploadEncryptFile")
     public String encryptFile(@RequestParam("file") MultipartFile file, @RequestParam("user") String username) throws IOException {
         try {
-            storageService.storeAndEncrypt(file, username);
-            log.info("File Successfully saved");
-            return "File Successfully saved and encrypted successfully ";
+            String key = storageService.storeAndEncrypt(file, username);
+            updateUserData(username, key);
+            log.info("File Successfully encrypted and saved");
+            return key;
         } catch (Exception e) {
             log.error("Error while saving file {}", e.getMessage());
+            e.printStackTrace();
             return e.getMessage();
         }
     }
 
+    @PostMapping("/getDecryptedFile")
+    public String decryptFile(@RequestParam("key") String key, @RequestParam("user") String username) throws IOException {
+        try {
+            storageService.decryptImage(key, username);
+            updateUserData(username, key);
+            log.info("File Successfully encrypted and saved");
+            return key;
+        } catch (Exception e) {
+            log.error("Error while saving file {}", e.getMessage());
+            e.printStackTrace();
+            return e.getMessage();
+        }
+    }
 
     @GetMapping("/getAll")
     public Object getALlUsers() {
@@ -56,4 +72,10 @@ public class FileOperations {
     }
 
 
+    private void updateUserData(String username, String key) {
+        Login originalUserInfo = mongoDbService.findItemByName(username);
+        originalUserInfo.setEncryptionKey(key);
+        mongoDbService.save(originalUserInfo);
+
+    }
 }
