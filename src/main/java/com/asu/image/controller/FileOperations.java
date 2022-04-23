@@ -53,12 +53,12 @@ public class FileOperations {
     }
 
     @PostMapping("/getDecryptedFile")
-    public String decryptFile(@RequestParam("key") String key, @RequestParam("user") String username) throws IOException {
+    public String decryptFile(@RequestParam("key") String key, @RequestParam("user") String username, @RequestParam("image") String imageName) throws IOException {
         try {
-            storageService.decryptImage(key, username);
-            updateUserData(username, key);
-            log.info("File Successfully encrypted and saved");
-            return key;
+            String decryptedFile = storageService.decryptImage(key, username, imageName);
+
+            log.info("File Successfully decrypted and uploaded to {}", decryptedFile);
+            return decryptedFile;
         } catch (Exception e) {
             log.error("Error while saving file {}", e.getMessage());
             e.printStackTrace();
