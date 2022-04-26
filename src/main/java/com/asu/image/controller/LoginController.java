@@ -16,6 +16,8 @@ import java.util.HashMap;
 
 @RestController
 @Log4j2
+@CrossOrigin(origins = "http://localhost:3000")
+
 public class LoginController {
 
 

@@ -98,7 +98,7 @@ public class StorageService {
     private String decryptImageAndSave(Key key, String encryptedFilePath, String userName) throws IOException {
 
         log.info("Decrypting file from : {}", encryptedFilePath);
-        String decryptedFileName = UUID.randomUUID().toString();
+        String decryptedFileName = UUID.randomUUID().toString()+".jpeg";
 
         try {
             File file = new File(encryptedFilePath);
